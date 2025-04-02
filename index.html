@@ -1,124 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Azure Maps - Full Features</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/css/atlas.min.css?api-version=2" type="text/css">
-  <style>
-    html, body, #myMap {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    #controls {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    input, button, select, label {
-      padding: 8px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      outline: none;
-    }
-    button {
-      cursor: pointer;
-      background-color: #0078D4;
-      color: white;
-      border: none;
-    }
-    button:hover {
-      background-color: #005A9E;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Maps</title>
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        #map { width: 100%; height: 90vh; }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            border: none;
+            background: #0078D4;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+    </style>
 </head>
 <body>
-  <div id="myMap"></div>
-  <div id="controls">
-    <input type="text" id="searchBox" placeholder="Cari lokasi...">
-    <button onclick="searchLocation()">Cari</button>
-    <button onclick="findMe()">📍 Find Me</button>
-    <select id="mapStyle" onchange="changeStyle()">
-      <option value="road">Jalan</option>
-      <option value="satellite">Satelit</option>
-      <option value="grayscale">Grayscale</option>
-      <option value="night">Malam</option>
-    </select>
-    <label><input type="checkbox" id="showLabels" onchange="toggleLabels()"> Detail</label>
-  </div>
-  <script src="https://atlas.microsoft.com/sdk/js/atlas.min.js?api-version=2"></script>
-  <script>
-    var subscriptionKey = '4i0e6UnHavG8777vBsyY3LujOC9XVRArXmxpKyk6JJrzYoP47nJtJQQJ99BCACYeBjFwNasMAAAgAZMP3rmN';
-    var map = new atlas.Map('myMap', {
-      center: [106.84513, -6.21462],
-      zoom: 10,
-      view: 'Auto',
-      language: 'id-ID',
-      style: 'road',
-      authOptions: {
-        authType: 'subscriptionKey',
-        subscriptionKey: subscriptionKey
-      }
-    });
+
+    <div id="map"></div>
     
-    map.events.add('ready', function () {
-      map.controls.add([new atlas.control.ZoomControl(), new atlas.control.CompassControl()], {
-        position: atlas.ControlPosition.TopLeft
-      });
-    });
+    <div class="controls">
+        <button onclick="changeMapStyle('road')">Jalan</button>
+        <button onclick="changeMapStyle('satellite')">Satelit</button>
+        <button onclick="changeMapStyle('night')">Malam</button>
+        <button onclick="changeMapStyle('grayscale_light')">Grayscale</button>
+        <button onclick="toggleLabels()">Detail</button>
+    </div>
 
-    function searchLocation() {
-      var query = document.getElementById('searchBox').value;
-      var searchURL = `https://atlas.microsoft.com/search/address/json?api-version=1.0&subscription-key=${subscriptionKey}&query=${encodeURIComponent(query)}`;
-      fetch(searchURL)
-        .then(response => response.json())
-        .then(data => {
-          if (data.results.length > 0) {
-            var position = data.results[0].position;
-            map.setCamera({ center: [position.lon, position.lat], zoom: 14 });
-            map.markers.clear();
-            var marker = new atlas.HtmlMarker({ position: [position.lon, position.lat], text: '📍' });
-            map.markers.add(marker);
-          }
-        });
-    }
+    <script>
+        let map, labelLayer;
 
-    function findMe() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          var userLocation = [position.coords.longitude, position.coords.latitude];
-          map.setCamera({ center: userLocation, zoom: 14 });
-          map.markers.clear();
-          var marker = new atlas.HtmlMarker({ position: userLocation, text: '👤' });
-          map.markers.add(marker);
-        }, function (error) {
-          alert("Gagal mendapatkan lokasi: " + error.message);
-        }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-      } else {
-        alert("Browser tidak mendukung geolokasi.");
-      }
-    }
-    
-    function changeStyle() {
-      var style = document.getElementById('mapStyle').value;
-      map.setStyle(`Microsoft.${style}`);
-    }
+        function initMap() {
+            map = new atlas.Map("map", {
+                center: [106.8272, -6.1751], // Lokasi awal (Jakarta)
+                zoom: 12,
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: '4i0e6UnHavG8777vBsyY3LujOC9XVRArXmxpKyk6JJrzYoP47nJtJQQJ99BCACYeBjFwNasMAAAgAZMP3rmN'
+                }
+            });
 
-    function toggleLabels() {
-      var showLabels = document.getElementById('showLabels').checked;
-      map.setLayersVisible(['PlaceLabels'], showLabels);
-    }
-  </script>
+            map.events.add('ready', function () {
+                // Tambahkan kontrol untuk zoom dan kompas
+                map.controls.add([new atlas.control.ZoomControl(), new atlas.control.CompassControl()], {
+                    position: "top-right"
+                });
+            });
+        }
+
+        function changeMapStyle(style) {
+            map.setStyle(style);
+        }
+
+        function toggleLabels() {
+            if (!labelLayer) {
+                labelLayer = new atlas.layer.SymbolLayer(map.sources.createFromData([]), null, {
+                    textOptions: { visible: true }
+                });
+                map.layers.add(labelLayer);
+            } else {
+                let isVisible = labelLayer.getOptions().textOptions.visible;
+                labelLayer.setOptions({ textOptions: { visible: !isVisible } });
+            }
+        }
+
+        window.onload = initMap;
+    </script>
+
 </body>
 </html>
