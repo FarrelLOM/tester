@@ -6,7 +6,10 @@ const mapStyles = {
     road: "road",
     satellite: "satellite",
     night: "night",
-    grayscale: "grayscale_light"
+    grayscale_light: "grayscale_light",
+    grayscale_dark: "grayscale_dark",
+    road_shaded_relief: "road_shaded_relief",
+    satellite_labels: "satellite_road_labels"
 };
 
 function initMap() {
@@ -25,13 +28,23 @@ function initMap() {
         map.controls.add([new atlas.control.ZoomControl(), new atlas.control.CompassControl()], {
             position: "top-right"
         });
+
+        // Tambahkan kontrol pemilih gaya
+        map.controls.add(new atlas.control.StyleControl({
+            mapStyles: Object.values(mapStyles),
+            layout: "list",
+            style: "light"
+        }), { position: "top-right" });
     });
 
     // Tambahkan event listener ke tombol-tombol
     document.getElementById("btn-road").addEventListener("click", () => changeMapStyle(mapStyles.road));
     document.getElementById("btn-satellite").addEventListener("click", () => changeMapStyle(mapStyles.satellite));
     document.getElementById("btn-night").addEventListener("click", () => changeMapStyle(mapStyles.night));
-    document.getElementById("btn-grayscale").addEventListener("click", () => changeMapStyle(mapStyles.grayscale));
+    document.getElementById("btn-grayscale-light").addEventListener("click", () => changeMapStyle(mapStyles.grayscale_light));
+    document.getElementById("btn-grayscale-dark").addEventListener("click", () => changeMapStyle(mapStyles.grayscale_dark));
+    document.getElementById("btn-road-relief").addEventListener("click", () => changeMapStyle(mapStyles.road_shaded_relief));
+    document.getElementById("btn-satellite-labels").addEventListener("click", () => changeMapStyle(mapStyles.satellite_labels));
     document.getElementById("btn-detail").addEventListener("click", toggleLabels);
     document.getElementById("btn-findme").addEventListener("click", findMe);
 }
@@ -43,7 +56,7 @@ function changeMapStyle(style) {
 // Toggle label detail seperti nama jalan, gedung, dll
 function toggleLabels() {
     labelsVisible = !labelsVisible;
-    let newStyle = labelsVisible ? map.getStyle() + "_labels" : map.getStyle().replace("_labels", "");
+    let newStyle = labelsVisible ? map.getStyle() : map.getStyle().replace("_labels", "");
     map.setStyle(newStyle);
 }
 
